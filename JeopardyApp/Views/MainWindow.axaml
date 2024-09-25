@@ -1,0 +1,183 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JeopardyApp.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:markupExtensions="clr-namespace:FluentIcons.Avalonia.MarkupExtensions;assembly=FluentIcons.Avalonia"
+        xmlns:models="clr-namespace:JeopardyApp.Models"
+        xmlns:views="clr-namespace:JeopardyApp.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="JeopardyApp.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="JeopardyApp">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    
+    <avalonia:SpacedGrid Margin="10" ShowGridLines="True"
+                         RowDefinitions="Auto,*,Auto" RowSpacing="10"
+                         ColumnDefinitions="Auto,*,Auto">
+        
+        <!-- Top Left: Toolbox (2x2 buttons) -->
+        <avalonia:SpacedGrid Grid.Row="0" Grid.Column="0"
+                             RowDefinitions="*,*" RowSpacing="10"
+                             ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Button Padding="5" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Open"
+                    Command="{Binding OpenFileCommand}"
+                    Content="{markupExtensions:SymbolIcon Symbol=Open, FontSize=24}"/>
+            <Button Padding="5" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Save"
+                    Command="{Binding SaveFileCommand}"
+                    Content="{markupExtensions:SymbolIcon Symbol=Save, FontSize=24}"/>
+            
+            <ToggleSwitch Padding="5" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                          Content="Edit Mode"
+                          ToolTip.Tip="Edit Mode" IsChecked="{Binding EditMode}"/>
+            
+        </avalonia:SpacedGrid>
+        
+        <!-- Top Middle: Board Name -->
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" 
+                    HorizontalAlignment="Center" VerticalAlignment="Center" 
+                    Spacing="10">
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center" FontSize="36"
+                           Text="{Binding Board.Title}"/>
+                
+                <Button Padding="5" ToolTip.Tip="Edit Board Name"
+                        IsVisible="{Binding EditMode}"
+                        Content="{markupExtensions:SymbolIcon Symbol=Edit, FontSize=24}"/>
+        </StackPanel>
+        
+        <!-- Bottom Center: Teams -->
+        <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Teams}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="10"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:Team">
+                    <Border BorderBrush="{DynamicResource ButtonBorderBrush}" BorderThickness="1" CornerRadius="5"
+                            Width="150" Height="150"
+                            Padding="5" Background="{DynamicResource ButtonBackground}">
+                        <avalonia:SpacedGrid RowDefinitions="*,*" RowSpacing="5" Margin="4"
+                                                 ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                            
+                                <avalonia:SpacedGrid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                                                     ColumnDefinitions="Auto,*,Auto">
+                                    
+                                    <Button Grid.Column="0" Padding="5" ToolTip.Tip="Edit Team Name"
+                                            IsVisible="{Binding $parent[views:MainWindow].ViewModel.EditMode}"
+                                            Command="{Binding $parent[views:MainWindow].ViewModel.EditTeamCommand}"
+                                            CommandParameter="{Binding}"
+                                            Width="30" Height="30"
+                                            Content="{markupExtensions:SymbolIcon Symbol=Edit, FontSize=16}"/>
+                                    
+                                    <TextBlock Grid.Column="1"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="22" FontWeight="SemiBold" Text="{Binding Name}"/>
+                                    
+                                    <Button Grid.Column="2" Padding="5" ToolTip.Tip="Remove Team"
+                                            IsVisible="{Binding $parent[views:MainWindow].ViewModel.EditMode}"
+                                            Command="{Binding $parent[views:MainWindow].ViewModel.RemoveTeamCommand}"
+                                            CommandParameter="{Binding}"
+                                            Width="30" Height="30"
+                                            Content="{markupExtensions:SymbolIcon Symbol=Delete, FontSize=16}"/>
+                                    
+                                </avalonia:SpacedGrid>
+                            
+                                <!-- up and down arrow around the score -->
+                                <Button Padding="5" Grid.Row="1" Grid.Column="0" ToolTip.Tip="Decrease Score"
+                                    
+                                        Command="{Binding $parent[views:MainWindow].ViewModel.IncreaseScoreCommand}"
+                                        CommandParameter="{Binding}"
+                                    
+                                        Width="40" Height="40"
+                                        Content="{markupExtensions:SymbolIcon Symbol=ArrowUp, FontSize=16}"/>
+                            
+                                <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="20" FontWeight="SemiBold" Text="{Binding Score}"/>
+                            
+                                <Button Padding="5" Grid.Row="1" Grid.Column="2" ToolTip.Tip="Increase Score"
+                                    
+                                        Command="{Binding $parent[views:MainWindow].ViewModel.DecreaseScoreCommand}"
+                                        CommandParameter="{Binding}"
+
+                                        Width="40" Height="40"
+                                        Content="{markupExtensions:SymbolIcon Symbol=ArrowDown, FontSize=16}"/>
+                            
+                            </avalonia:SpacedGrid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        
+        <!-- Bottom Right: Team control -->
+        <avalonia:SpacedGrid Grid.Row="2" Grid.Column="2"
+                             RowDefinitions="Auto,Auto,Auto" RowSpacing="10"
+                             ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Button Padding="5" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Add Team"
+                    Command="{Binding AddTeamCommand}"
+                    Content="{markupExtensions:SymbolIcon Symbol=Add, FontSize=24}"/>
+        </avalonia:SpacedGrid>
+        
+        <!-- Middle Center: Board Categories -->
+        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Board.Categories}" HorizontalAlignment="Center">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="10"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:Category">
+                    <Border BorderThickness="1" CornerRadius="5" Width="200"
+                            Padding="5" Background="{DynamicResource ButtonBackground}">
+                        <StackPanel Orientation="Vertical" Spacing="5">
+                            
+                            <avalonia:SpacedGrid HorizontalAlignment="Center" ColumnDefinitions="Auto,*,Auto">
+                                <Button Grid.Column="0" Padding="5" ToolTip.Tip="Edit Category Title"
+                                        IsVisible="{Binding $parent[views:MainWindow].ViewModel.EditMode}"
+                                        Command="{Binding $parent[views:MainWindow].ViewModel.EditCategoryCommand}"
+                                        CommandParameter="{Binding}"
+                                        Width="30" Height="30"
+                                        Content="{markupExtensions:SymbolIcon Symbol=Edit, FontSize=16}"/>
+                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" FontSize="20" FontWeight="SemiBold"
+                                       Text="{Binding Title}"/>
+                                <Button Grid.Column="2" Padding="5" ToolTip.Tip="Remove Category"
+                                        IsVisible="{Binding $parent[views:MainWindow].ViewModel.EditMode}"
+                                        Command="{Binding $parent[views:MainWindow].ViewModel.RemoveCategoryCommand}"
+                                        CommandParameter="{Binding}"
+                                        Width="30" Height="30"
+                                        Content="{markupExtensions:SymbolIcon Symbol=Delete, FontSize=16}"/>
+                            </avalonia:SpacedGrid>
+                            
+                            <ItemsControl ItemsSource="{Binding Cells}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" Spacing="5"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Cell">
+                                        <Border HorizontalAlignment="Stretch" BorderBrush="{DynamicResource ButtonBorderBrush}" BorderThickness="1" CornerRadius="5"
+                                                Padding="5" Background="{DynamicResource ButtonBackground}">
+                                            <TextBlock HorizontalAlignment="Center" FontSize="16"
+                                                       Text="{Binding Score}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        
+    </avalonia:SpacedGrid>
+
+</Window>

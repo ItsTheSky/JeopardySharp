@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JeopardyApp", "JeopardyApp\JeopardyApp.csproj", "{375B9AE9-16F9-4A23-893A-5BC6E6402E1B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{375B9AE9-16F9-4A23-893A-5BC6E6402E1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{375B9AE9-16F9-4A23-893A-5BC6E6402E1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{375B9AE9-16F9-4A23-893A-5BC6E6402E1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{375B9AE9-16F9-4A23-893A-5BC6E6402E1B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
