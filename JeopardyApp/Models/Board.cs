@@ -12,8 +12,8 @@ public partial class Board : ObservableObject
     
     [ObservableProperty] private ObservableCollection<Category> _categories;
     [ObservableProperty] private string _title;
-    
-    public int GetRows() => Categories.Max(category => category.Cells.Count);
+
+    public int GetRows() => !Categories.Any() ? 0 : Categories.Max(category => category.Cells.Count);
     public int GetColumns() => Categories.Count;
     
 }

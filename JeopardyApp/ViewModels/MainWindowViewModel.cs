@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using JeopardyApp.Controls;
 using JeopardyApp.Models;
 using JeopardyApp.Models.Converters;
 using JeopardyApp.Views;
@@ -19,16 +20,10 @@ namespace JeopardyApp.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public JsonSerializerOptions JsonOptions { get; } = new()
-    {
-        WriteIndented = true,
-        Converters = { new DisplayDataConverter() }
-    };
-    
-    [ObservableProperty] private string? _openedFile;
+    [ObservableProperty] private Dictionary<Cell, int> _scorePerRow = new();
+
+    [ObservableProperty] private JeoFile? _openedFile;
     [ObservableProperty] private bool _editMode;
-    
-    [ObservableProperty] private Cell? _showingCell;
     
     [ObservableProperty] private Board _board;
     [ObservableProperty] private ObservableCollection<Team> _teams = new();
@@ -53,12 +48,17 @@ public partial class MainWindowViewModel : ViewModelBase
         
         var file = files[0];
         var stream = await file.OpenReadAsync();
-        var board = await JsonSerializer.DeserializeAsync<Board>(stream, JsonOptions);
-        if (board == null) 
+        try
+        {
+            OpenedFile = await JeoFile.LoadFile(stream);
+            Board = OpenedFile.Board;
+        }
+        catch (Exception e)
+        {
+            await ShowInformationMessage("Error Opening File", e.Message);
+            Console.WriteLine(e);
             return;
-        
-        Board = board;
-        OpenedFile = file.Path.AbsolutePath;
+        }
         
         ResetGame();
         await ShowInformationMessage("File Opened", "The file has been opened successfully.");
@@ -66,9 +66,8 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public async Task SaveFile()
     {
-        Console.WriteLine("savinh file");
         string filePath;
-        if (OpenedFile == null)
+        if (OpenedFile == null || string.IsNullOrEmpty(OpenedFile.FilePath))
         {
             var result = await MainWindow.Instance.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -85,14 +84,30 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             
             filePath = result.Path.AbsolutePath;
-            OpenedFile = filePath;
         }
-        else filePath = OpenedFile;
+        else filePath = OpenedFile.FilePath;
         
-        var json = JsonSerializer.Serialize(Board, JsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
-        
+        await JeoFile.SaveFile(filePath, Board);
         await ShowInformationMessage("File Saved", "The file has been saved successfully.");
+    }
+
+    public void DeleteRow(Cell cell)
+    {
+        var row = Board.Categories[0].Cells.ToList().IndexOf(cell);
+        Console.WriteLine("Got index " + row);
+        foreach (var category in Board.Categories)
+            category.Cells.RemoveAt(row);
+    }
+
+    public void ApplyRowScore(object param)
+    {
+        var values = (object[]) param;
+        var cell = (Cell) values[0];
+        var score = (int) (decimal) values[1];
+        
+        var row = Board.Categories[0].Cells.ToList().IndexOf(cell);
+        foreach (var category in Board.Categories)
+            category.Cells[row].Score = score;
     }
 
     #region Methods
@@ -101,6 +116,20 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         foreach (var cell in Board.Categories.SelectMany(category => category.Cells))
             cell.IsAnswered = false;
+    }
+    
+    [RelayCommand]
+    public void AddRow()
+    {
+        foreach (var category in Board.Categories)
+        {
+            category.Cells.Add(new Cell
+            {
+                Score = 0,
+                Question = new DisplayData(),
+                Answer = new DisplayData()
+            });
+        }
     }
     
     public void AddTeam()
@@ -117,6 +146,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Teams.Remove(team);
     }
     
+    [RelayCommand]
     public void AddCategory()
     {
         var cells = new List<Cell>();
@@ -133,7 +163,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Board.Categories.Add(new Category
         {
             Title = "Category " + (Board.Categories.Count + 1),
-            Cells = cells
+            Cells = new ObservableCollection<Cell>(cells)
         });
     }
     
@@ -151,18 +181,18 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public void DecreaseScore(Team team)
     {
-        if (ShowingCell == null) 
+        if (SelectedCell == null) 
             team.Score -= 1;
         else 
-            team.Score -= ShowingCell.Score;
+            team.Score -= SelectedCell.Score;
     }
     
     public void IncreaseScore(Team team)
     {
-        if (ShowingCell == null) 
+        if (SelectedCell == null) 
             team.Score += 1;
         else 
-            team.Score += ShowingCell.Score;
+            team.Score += SelectedCell.Score;
     }
     
     public async Task EditTeam(Team team)
@@ -170,6 +200,40 @@ public partial class MainWindowViewModel : ViewModelBase
         var newName = await AskForString("Enter new team name");
         if (newName != null)
             team.Name = newName;
+    }
+
+    public async Task EditCell(Cell cell, bool question)
+    {
+        var context = new DisplayEditorViewModel(question ? cell.Question : cell.Answer);
+        var dialog = new ContentDialog
+        {
+            Content = new DisplayEditor
+            {
+                DataContext = context
+            },
+            Title = "Edit Question",
+            PrimaryButtonText = "OK",
+            CloseButtonText = "Cancel"
+        };
+        
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            if (question) 
+                cell.Question = context.ToDisplayData();
+            else 
+                cell.Answer = context.ToDisplayData();
+        }
+    }
+
+    public async Task EditQuestion(Cell cell)
+    {
+        await EditCell(cell, true);
+    }
+    
+    public async Task EditAnswer(Cell cell)
+    {
+        await EditCell(cell, false);
     }
 
     #endregion
@@ -187,6 +251,13 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public AsyncRelayCommand OpenFileCommand => new(OpenFile!);
     public AsyncRelayCommand SaveFileCommand => new(SaveFile!);
+    public RelayCommand ResetGameStateCommand => new(ResetGame!);
+    
+    public RelayCommand<Cell> DeleteRowCommand => new(DeleteRow!);
+    public RelayCommand<object> ApplyRowScoreCommand => new(ApplyRowScore!);
+    
+    public AsyncRelayCommand<Cell> EditCellQuestionCommand => new(EditQuestion!);
+    public AsyncRelayCommand<Cell> EditCellAnswerCommand => new(EditAnswer!);
     
     #endregion
 
@@ -223,6 +294,46 @@ public partial class MainWindowViewModel : ViewModelBase
         await dialog.ShowAsync();
     }
     
+    #endregion
+
+    #region Card Reveal
+
+    [ObservableProperty] private Cell? _selectedCell;
+    [ObservableProperty] private bool _isQuestionShowing;
+    [ObservableProperty] private bool _isAnswerRevealed;
+    
+    public RelayCommand<Cell> SelectCellCommand => new(SelectCell!);
+    public RelayCommand RevealAnswerCommand => new(RevealAnswer!);
+    public RelayCommand CloseCardCommand => new(CloseCard!);
+
+    private void SelectCell(Cell cell)
+    {
+        if (!EditMode && !cell.IsAnswered)
+        {
+            SelectedCell = cell;
+            IsAnswerRevealed = false;
+            MainWindow.Instance.CardDisplayControl.Refresh();
+
+            IsQuestionShowing = true;
+        }
+    }
+
+    private void RevealAnswer()
+    {
+        IsAnswerRevealed = true;
+    }
+
+    private void CloseCard()
+    {
+        if (SelectedCell != null)
+        {
+            SelectedCell.IsAnswered = true;
+        }
+        SelectedCell = null;
+        IsQuestionShowing = false;
+        IsAnswerRevealed = false;
+    }
+
     #endregion
     
 }

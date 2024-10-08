@@ -3,11 +3,17 @@
              x:Class="JeopardyApp.App"
              xmlns:local="using:JeopardyApp"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             xmlns:converters="clr-namespace:JeopardyApp.Models.Converters"
              RequestedThemeVariant="Default">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
+    
+    <Application.Resources>
+        <converters:MultiArrayConverter x:Key="MultiArrayConverter"/>
+        <converters:IntTernaryConverter x:Key="IntTernaryConverter"/>
+    </Application.Resources>
   
     <Application.Styles>
         <styling:FluentAvaloniaTheme />
