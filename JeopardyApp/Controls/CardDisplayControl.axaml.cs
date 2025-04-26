@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -39,10 +40,11 @@ public partial class CardDisplayControl : UserControl
             
             if (displayData.Type == DisplayData.DisplayDataType.Text)
             {
+                var text = displayData.Text!;
                 ContentDisplay.Content = new TextBlock
                 {
-                    Text = displayData.Text,
-                    FontSize = 30,
+                    Text = text,
+                    FontSize = 80,
                     TextWrapping = TextWrapping.Wrap,
                     TextAlignment = TextAlignment.Center
                 };
@@ -59,6 +61,9 @@ public partial class CardDisplayControl : UserControl
                     StretchDirection = StretchDirection.Both
                 };
                 RenderOptions.SetBitmapInterpolationMode((Image) ContentDisplay.Content, BitmapInterpolationMode.HighQuality);
+            } else if (displayData.Type == DisplayData.DisplayDataType.Music)
+            {
+                
             }
         }
     }

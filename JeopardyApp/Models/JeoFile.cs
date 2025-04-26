@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using JeopardyApp.Models.Converters;
+using NAudio.Wave;
 
 namespace JeopardyApp.Models;
 
@@ -19,15 +20,16 @@ public class JeoFile
 
     public Board Board { get; private set; }
     public Dictionary<string, Bitmap> Images { get; private set; } = [];
+    public Dictionary<string, Mp3FileReader> Musics { get; private set; } = [];
     public string FilePath { get; set; } = "";
 
-    public static async Task<JeoFile> LoadFile(Stream fileStream, string filePath = "")
+    public static async Task<JeoFile> LoadFile(string filePath = "")
     {
-        var legacyFile = TryLoadLegacyFile(fileStream);
+        var legacyFile = TryLoadLegacyFile(filePath);
         if (legacyFile != null)
             return legacyFile;
         
-        using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read);
+        using var archive = ZipFile.OpenRead(filePath);
         Board? board = null;
         var images = new Dictionary<string, Bitmap>();
 
@@ -82,14 +84,13 @@ public class JeoFile
         };
     }
 
-    private static JeoFile? TryLoadLegacyFile(Stream fileStream)
+    private static JeoFile? TryLoadLegacyFile(string filePath)
     {
         // legacy are plain JSON files of the board
         Board? board;
         try
         {
-            using var reader = new StreamReader(fileStream);
-            var json = reader.ReadToEnd();
+            var json = File.ReadAllText(filePath);
             board = JsonSerializer.Deserialize<Board>(json, JsonOptions);
         }
         catch (Exception e)
@@ -101,6 +102,9 @@ public class JeoFile
 
     public static async Task SaveFile(string filePath, Board board)
     {
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+        
         using var archive = ZipFile.Open(filePath, ZipArchiveMode.Create);
         var boardEntry = archive.CreateEntry("board.json");
         await using (var stream = boardEntry.Open())

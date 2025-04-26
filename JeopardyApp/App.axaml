@@ -4,6 +4,7 @@
              xmlns:local="using:JeopardyApp"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
              xmlns:converters="clr-namespace:JeopardyApp.Models.Converters"
+             xmlns:utilities="clr-namespace:JeopardyApp.Utilities"
              RequestedThemeVariant="Default">
 
     <Application.DataTemplates>
@@ -13,6 +14,10 @@
     <Application.Resources>
         <converters:MultiArrayConverter x:Key="MultiArrayConverter"/>
         <converters:IntTernaryConverter x:Key="IntTernaryConverter"/>
+        
+        <utilities:BoolToPlayPauseSymbolConverter x:Key="BoolToPlayPauseSymbolConverter" />
+        <utilities:BoolToPlayPauseTextConverter x:Key="BoolToPlayPauseTextConverter" />
+        <utilities:VolumeToSymbolConverter x:Key="VolumeToSymbolConverter" />
     </Application.Resources>
   
     <Application.Styles>

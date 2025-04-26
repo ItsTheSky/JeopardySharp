@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -15,6 +16,8 @@ using JeopardyApp.Controls;
 using JeopardyApp.Models;
 using JeopardyApp.Models.Converters;
 using JeopardyApp.Views;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIcon = FluentIcons.Avalonia.SymbolIcon;
 
 namespace JeopardyApp.ViewModels;
 
@@ -47,10 +50,10 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         
         var file = files[0];
-        var stream = await file.OpenReadAsync();
+        var path = Uri.UnescapeDataString(file.Path.AbsolutePath);
         try
         {
-            OpenedFile = await JeoFile.LoadFile(stream);
+            OpenedFile = await JeoFile.LoadFile(path);
             Board = OpenedFile.Board;
         }
         catch (Exception e)
@@ -63,12 +66,16 @@ public partial class MainWindowViewModel : ViewModelBase
         ResetGame();
         await ShowInformationMessage("File Opened", "The file has been opened successfully.");
     }
-    
-    public async Task SaveFile()
+
+    private string? _lastSaveFolder;
+    public async Task SaveFile(bool showSuccess = true)
     {
         string filePath;
         if (OpenedFile == null || string.IsNullOrEmpty(OpenedFile.FilePath))
         {
+            var startFolder = _lastSaveFolder == null 
+                ? await MainWindow.Instance.StorageProvider.TryGetWellKnownFolderAsync(WellKnownFolder.Documents)
+                : await MainWindow.Instance.StorageProvider.TryGetFolderFromPathAsync(_lastSaveFolder);
             var result = await MainWindow.Instance.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
             {
                 DefaultExtension = "jeosharp",
@@ -78,7 +85,8 @@ public partial class MainWindowViewModel : ViewModelBase
                         Patterns = ["*.jeosharp"]
                     }
                 ],
-                SuggestedFileName = "JeopardyBoard"
+                SuggestedFileName = "JeopardyBoard",
+                SuggestedStartLocation = startFolder
             });
             if (result == null) 
                 return;
@@ -87,14 +95,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else filePath = OpenedFile.FilePath;
         
+        _lastSaveFolder = Path.GetDirectoryName(filePath);
         await JeoFile.SaveFile(filePath, Board);
-        await ShowInformationMessage("File Saved", "The file has been saved successfully.");
+        if (showSuccess) 
+            await ShowInformationMessage("File Saved", "The file has been saved successfully.");
     }
 
     public void DeleteRow(Cell cell)
     {
         var row = Board.Categories[0].Cells.ToList().IndexOf(cell);
-        Console.WriteLine("Got index " + row);
         foreach (var category in Board.Categories)
             category.Cells.RemoveAt(row);
     }
@@ -108,6 +117,23 @@ public partial class MainWindowViewModel : ViewModelBase
         var row = Board.Categories[0].Cells.ToList().IndexOf(cell);
         foreach (var category in Board.Categories)
             category.Cells[row].Score = score;
+    }
+    
+    [ObservableProperty] private SymbolIcon _saveStatusIcon = new SymbolIcon { Symbol = Symbol.SaveSync, FontSize = 24 };
+
+    [RelayCommand]
+    public async Task QuickSave()
+    {
+        if (OpenedFile == null || string.IsNullOrEmpty(OpenedFile.FilePath))
+        {
+            await ShowInformationMessage("Error Saving", "You must open a file before you can save.");
+            return;
+        }
+        
+        await SaveFile(false);
+        SaveStatusIcon = new SymbolIcon { Symbol = Symbol.Checkmark, FontSize = 24 };
+        await Task.Delay(2000);
+        SaveStatusIcon = new SymbolIcon { Symbol = Symbol.SaveSync, FontSize = 24 };
     }
 
     #region Methods
@@ -250,7 +276,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public AsyncRelayCommand<Category> EditCategoryCommand => new(EditCategory!);
     
     public AsyncRelayCommand OpenFileCommand => new(OpenFile!);
-    public AsyncRelayCommand SaveFileCommand => new(SaveFile!);
+    public AsyncRelayCommand SaveFileCommand => new(() => SaveFile());
     public RelayCommand ResetGameStateCommand => new(ResetGame!);
     
     public RelayCommand<Cell> DeleteRowCommand => new(DeleteRow!);

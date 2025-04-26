@@ -28,7 +28,7 @@
         <!-- Top Left: Toolbox -->
         <avalonia:SpacedGrid Grid.Row="0" Grid.Column="0"
                              RowDefinitions="*,*" RowSpacing="10"
-                             ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
+                             ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10">
             <Button Padding="5" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Open"
                     Command="{Binding OpenFileCommand}"
                     Content="{markupExtensions:SymbolIcon Symbol=Open, FontSize=24}"/>
@@ -38,6 +38,10 @@
             <Button Padding="5" Grid.Row="0" Grid.Column="2" ToolTip.Tip="Reset Game State"
                     Command="{Binding ResetGameStateCommand}"
                     Content="{markupExtensions:SymbolIcon Symbol=ArrowReset, FontSize=24}"/>
+            
+            <Button Padding="5" Grid.Row="0" Grid.Column="3" ToolTip.Tip="Quick Save"
+                    Command="{Binding QuickSaveCommand}"
+                    Content="{Binding SaveStatusIcon}"/>
             
             <ToggleSwitch Padding="5" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                           Content="Edit Mode"
@@ -114,9 +118,9 @@
                     Content="{markupExtensions:SymbolIcon Symbol=Add, FontSize=32}"/>
         </StackPanel>
         
-        <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
             <avalonia:SpacedGrid ColumnDefinitions="Auto,*,Auto" RowDefinitions="*,Auto">
                 
                 <avalonia:SpacedGrid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,*" RowSpacing="5" IsVisible="{Binding EditMode}">
@@ -168,9 +172,8 @@
                 </ItemsControl>
                 </avalonia:SpacedGrid>
                 
-                <Grid Grid.Column="1"  Grid.Row="0">
                     
-                    <ItemsControl ItemsSource="{Binding Board.Categories}" HorizontalAlignment="Stretch">
+                <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Board.Categories}" HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Columns="{Binding Board.Categories.Count}" />
@@ -248,23 +251,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Grid IsVisible="{Binding IsQuestionShowing}"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch">
-                    <controls:CardDisplayControl
-                                                 x:Name="CardDisplayControl"
-                                                 HorizontalAlignment="Stretch"
-                                                 VerticalAlignment="Stretch">
-                        <controls:CardDisplayControl.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform ScaleX="0.1" ScaleY="0.1" />
-                                <TranslateTransform X="0" Y="0" />
-                            </TransformGroup>
-                        </controls:CardDisplayControl.RenderTransform>
-                    </controls:CardDisplayControl>
-                </Grid>
                     
-                </Grid>
                 
                 <avalonia:SpacedGrid Grid.Row="0" Grid.Column="2" MinWidth="150" RowDefinitions="Auto,*" RowSpacing="5" IsVisible="{Binding EditMode}">
                     <TextBlock Grid.Row="0" Text="   " FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -283,6 +270,23 @@
             </avalonia:SpacedGrid>
             
         </ScrollViewer>
+            
+            <Grid IsVisible="{Binding IsQuestionShowing}"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+                <controls:CardDisplayControl
+                    x:Name="CardDisplayControl"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                    <controls:CardDisplayControl.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="0.1" ScaleY="0.1" />
+                            <TranslateTransform X="0" Y="0" />
+                        </TransformGroup>
+                    </controls:CardDisplayControl.RenderTransform>
+                </controls:CardDisplayControl>
+            </Grid>
+        </Grid>
 
     </avalonia:SpacedGrid>
 

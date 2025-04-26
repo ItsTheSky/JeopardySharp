@@ -1,0 +1,77 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:global="clr-namespace:"
+             xmlns:avalonia="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             x:Class="JeopardyApp.Controls.AudioPlayerControl"
+             x:DataType="global:AudioPlayerViewModel"
+             Height="80">
+    <Design.DataContext>
+        <global:AudioPlayerViewModel />
+    </Design.DataContext>
+
+    <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12">
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+            <!-- Play/Pause and Stop Buttons -->
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Spacing="8">
+                <Button Classes="accent" 
+                        Command="{Binding PlayPauseCommand}"
+                        Width="32" Height="32"
+                        Padding="4"
+                        ToolTip.Tip="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseTextConverter}}">
+                    <avalonia:SymbolIcon Symbol="{Binding IsPlaying, 
+                        Converter={StaticResource BoolToPlayPauseSymbolConverter}}" />
+                </Button>
+                
+                <Button Command="{Binding StopCommand}"
+                        Width="32" Height="32"
+                        Padding="4"
+                        ToolTip.Tip="Stop">
+                    <avalonia:SymbolIcon Symbol="Stop" />
+                </Button>
+            </StackPanel>
+
+            <!-- Time Labels -->
+            <StackPanel Grid.Row="0" Grid.Column="1" 
+                        Orientation="Horizontal" 
+                        VerticalAlignment="Center"
+                        Margin="12,0">
+                <TextBlock Text="{Binding CurrentTime}" 
+                           VerticalAlignment="Center" />
+                <TextBlock Text=" / " 
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding TotalTime}" 
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Volume Control -->
+            <StackPanel Grid.Row="0" Grid.Column="2" 
+                        Orientation="Horizontal" 
+                        Spacing="8"
+                        Width="120">
+                <avalonia:SymbolIcon Symbol="{Binding Volume, 
+                    Converter={StaticResource VolumeToSymbolConverter}}"
+                    VerticalAlignment="Center" />
+                <Slider Value="{Binding Volume}"
+                        Minimum="0"
+                        Maximum="1"
+                        Width="80"
+                        VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Progress Slider -->
+            <Slider Grid.Row="1" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="3"
+                    Margin="0,8,0,0"
+                    Minimum="0"
+                    Maximum="{Binding Duration}"
+                    Value="{Binding Position}"
+                    IsEnabled="{Binding CanSeek}" />
+        </Grid>
+    </Border>
+</UserControl>

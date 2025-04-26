@@ -31,6 +31,7 @@ public class DisplayDataConverter : JsonConverter<DisplayData>
                     {
                         "text" => DisplayData.DisplayDataType.Text,
                         "image" => DisplayData.DisplayDataType.Image,
+                        "music" => DisplayData.DisplayDataType.Music,
                         _ => throw new JsonException()
                     };
                     break;
@@ -39,6 +40,9 @@ public class DisplayDataConverter : JsonConverter<DisplayData>
                     break;
                 case "imagePath":
                     displayData.ImagePath = reader.GetString();
+                    break;
+                case "musicPath":
+                    displayData.MusicPath = reader.GetString();
                     break;
                 default:
                     throw new JsonException();
@@ -56,6 +60,7 @@ public class DisplayDataConverter : JsonConverter<DisplayData>
         {
             DisplayData.DisplayDataType.Text => "text",
             DisplayData.DisplayDataType.Image => "image",
+            DisplayData.DisplayDataType.Music => "music",
             _ => throw new JsonException()
         });
 
@@ -63,6 +68,10 @@ public class DisplayDataConverter : JsonConverter<DisplayData>
             writer.WriteString("text", value.Text);
         else if (value.Type == DisplayData.DisplayDataType.Image)
             writer.WriteString("imagePath", value.ImagePath);
+        else if (value.Type == DisplayData.DisplayDataType.Music)
+            writer.WriteString("musicPath", value.MusicPath);
+        else
+            throw new JsonException();
 
         writer.WriteEndObject();
     }

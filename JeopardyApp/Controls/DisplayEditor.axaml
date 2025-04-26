@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:JeopardyApp.ViewModels"
              xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+             xmlns:controls="clr-namespace:JeopardyApp.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:DisplayEditorViewModel"
              x:Class="JeopardyApp.Controls.DisplayEditor">
@@ -27,6 +28,27 @@
                 <TextBlock TextAlignment="Center" FontSize="18" FontWeight="SemiBold" IsVisible="{Binding !HasImageSelected}">
                     No image selected.
                 </TextBlock>
+            </StackPanel>
+        </TabItem>
+        
+        <TabItem TabIndex="2" Header="Music">
+            <StackPanel Orientation="Vertical" Spacing="8" Margin="10">
+                <Button Content="Select File" HorizontalAlignment="Stretch" 
+                        Command="{Binding BrowseMusicCommand}" />
+                
+                <avalonia:SpacedGrid RowDefinitions="*,*" RowSpacing="2"
+                                     IsVisible="{Binding HasMusic}"
+                                     ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <TextBlock Grid.Row="0" Grid.Column="0" FontWeight="SemiBold" Text="Title" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MusicInfo.Title, FallbackValue=Unknown}" />
+                        
+                    <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="SemiBold" Text="Duration" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MusicInfo.Duration, FallbackValue=Unknown}" />
+                </avalonia:SpacedGrid>
+                
+                <controls:AudioPlayerControl x:Name="AudioPlayer"
+                                             IsVisible="{Binding HasMusic}"
+                                             Margin="0,8,0,0" />
             </StackPanel>
         </TabItem>
     </TabControl>
